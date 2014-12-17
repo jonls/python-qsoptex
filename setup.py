@@ -42,6 +42,10 @@ extensions = [Extension('qsoptex', ['qsoptex'+ext],
 if USE_CYTHON:
     extensions = cythonize(extensions, include_path=include_dirs)
 
+# Read long description
+with open('README.rst') as f:
+    long_description = f.read()
+
 setup(
     name='python-qsoptex',
     version='0.1',
@@ -49,6 +53,9 @@ setup(
     url='https://github.com/jonls/qsopt-ex',
     author='Jon Lund Steffensen',
     author_email='jonlst@gmail.com',
+
+    description='Python bindings for QSopt_ex, an exact linear programming solver',
+    long_description=long_description,
 
     ext_modules = extensions
 )

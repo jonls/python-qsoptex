@@ -1,0 +1,8 @@
+
+# distutils files
+/MANIFEST
+/build
+/dist
+
+# Cython generated files
+/qsoptex.c

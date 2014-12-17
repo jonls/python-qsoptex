@@ -57,5 +57,12 @@ setup(
     description='Python bindings for QSopt_ex, an exact linear programming solver',
     long_description=long_description,
 
+    classifiers=['Development Status :: 4 - Beta',
+                 'Intended Audience :: Developers',
+                 'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+                 'Programming Language :: Cython',
+                 'Programming Language :: Python :: 2.7',
+                 'Topic :: Scientific/Engineering :: Mathematics'],
+
     ext_modules = extensions
 )

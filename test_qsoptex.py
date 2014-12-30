@@ -5,6 +5,17 @@ import numbers, fractions
 
 import qsoptex
 
+class TestVariableType(unittest.TestCase):
+    def test_variable_str(self):
+        '''Test that a variable of bytes type works'''
+        self._problem = qsoptex.ExactProblem()
+        self._problem.add_variable(name=b'x')
+
+    def test_variable_unicode(self):
+        '''Test that a variable of unicode type works'''
+        self._problem = qsoptex.ExactProblem()
+        self._problem.add_variable(name=u'x')
+
 class TestSmallExactProblem(unittest.TestCase):
     def setUp(self):
         self._problem = qsoptex.ExactProblem()

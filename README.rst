@@ -70,5 +70,6 @@ For example, if GnuMP is installed in the ``/opt/local`` prefix
 
 .. code:: shell
 
-    $ GMP_INCLUDE_DIR=/opt/local/include GMP_LIBRARY_DIR=/opt/local/lib ./setup.py install
+    $ GMP_INCLUDE_DIR=/opt/local/include GMP_LIBRARY_DIR=/opt/local/lib \
+            ./setup.py install
 

@@ -1,6 +1,10 @@
 QSopt\_ex Python bindings
 =========================
 
+.. image:: https://travis-ci.org/jonls/python-qsoptex.svg?branch=master
+   :alt: Build Status
+   :target: https://travis-ci.org/jonls/python-qsoptex
+
 Usage
 -----
 

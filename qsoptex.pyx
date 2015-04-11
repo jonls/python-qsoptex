@@ -445,6 +445,13 @@ cdef class ExactProblem:
             raise IndexError('Invalid variable index')
         return pyrational_from_mpq(self._c_sol_x[index])
 
+    def get_values(self):
+        '''Get the variable values as a list'''
+        values = []
+        for i in range(self._c_sol_nvars):
+            values.append(pyrational_from_mpq(self._c_sol_x[i]))
+        return values
+
     def get_objective_value(self):
         '''Get value of objective'''
         cdef int r

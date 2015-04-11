@@ -65,6 +65,12 @@ class TestSmallExactProblem(unittest.TestCase):
         y = self._problem.get_value('y')
         self.assertEqual(y, self._problem.get_value(1))
 
+    def test_solution_get_all_values_are_correct(self):
+        self._problem.solve()
+        values = self._problem.get_values()
+        self.assertEqual(values, [fractions.Fraction('35/2'),
+                                  fractions.Fraction('-35/2')])
+
     def test_solution_value_index_negative(self):
         self._problem.solve()
         with self.assertRaises(IndexError):

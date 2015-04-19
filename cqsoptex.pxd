@@ -92,3 +92,8 @@ cdef extern from 'qsopt_ex/exact.h' nogil:
 
     int QSexact_solver(mpq_QSdata* problem, mpq_t* const x, mpq_t* const y, QSbasis* const basis, int simplexalgo, int* status)
     void QSexact_set_precision(unsigned int precision)
+
+cdef extern from 'qsopt_ex/logging.h' nogil:
+    ctypedef void (*QSlog_func)(const char* message, void* data);
+
+    void QSlog_set_handler(QSlog_func log_func, void* data);

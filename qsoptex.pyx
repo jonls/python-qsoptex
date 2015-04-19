@@ -4,6 +4,7 @@ cimport cqsoptex
 cimport cgmp
 
 import numbers, fractions
+import logging
 
 
 # Initialize library
@@ -11,6 +12,15 @@ import numbers, fractions
 # run cqsoptex.QSexactClear()
 cqsoptex.QSexactStart()
 cqsoptex.QSexact_set_precision(128)
+
+# Setup logging for library
+logger = logging.getLogger(__name__)
+
+cdef void _python_log_func(const char* message, void* data):
+    logger.debug(message)
+
+cqsoptex.QSlog_set_handler(
+    <cqsoptex.QSlog_func>_python_log_func, NULL)
 
 
 ### Constants

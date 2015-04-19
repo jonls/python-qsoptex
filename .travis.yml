@@ -6,10 +6,10 @@ before_install:
   - sudo apt-get install -qq libgmp-dev libgmp10
 
   # Install latest release of qsopt-ex library
-  - wget https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.2/qsopt-ex2_2.5.10.2-0ubuntu1_amd64.deb
-  - sudo dpkg -i qsopt-ex2_2.5.10.2-0ubuntu1_amd64.deb
-  - wget https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.2/qsopt-ex-dev_2.5.10.2-0ubuntu1_amd64.deb
-  - sudo dpkg -i qsopt-ex-dev_2.5.10.2-0ubuntu1_amd64.deb
+  - wget https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.3/qsopt-ex2_2.5.10.3-1_amd64.deb
+  - sudo dpkg -i qsopt-ex2_2.5.10.3-1_amd64.deb
+  - wget https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.3/qsopt-ex-dev_2.5.10.3-1_amd64.deb
+  - sudo dpkg -i qsopt-ex-dev_2.5.10.3-1_amd64.deb
 
   # Install Cython
   - pip install cython

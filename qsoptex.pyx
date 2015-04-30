@@ -6,6 +6,8 @@ cimport cgmp
 import numbers, fractions
 import logging
 
+from six import string_types, integer_types, text_type, iteritems
+
 
 # Initialize library
 # Python modules never unload so we don't have any place to
@@ -86,6 +88,13 @@ cdef extern from 'Python.h':
     long PyLong_AsLongAndOverflow(object value, int* overflow)
 
 
+cdef const char* _chars(s):
+    """Convert input string to binary string (bytes)"""
+    if isinstance(s, text_type):
+        return s.encode('utf-8')
+    return s
+
+
 # Conversion from numeric Python types to GMP types
 cdef int mpz_set_pylong(cgmp.mpz_t rop, object value) except -1:
     '''Set mpz_t value from Python int/long object'''
@@ -94,7 +103,7 @@ cdef int mpz_set_pylong(cgmp.mpz_t rop, object value) except -1:
     cdef long long_value
     cdef cgmp.mpz_t z_temp
 
-    if not isinstance(value, (int, long)):
+    if not isinstance(value, integer_types):
         raise ValueError('Value must be a Python int or long')
 
     long_value = PyLong_AsLongAndOverflow(value, &overflow)
@@ -209,7 +218,8 @@ cdef class ExactProblem:
 
         cdef int r, colindex
 
-        if isinstance(variable, basestring):
+        if isinstance(variable, string_types):
+            variable = _chars(variable)
             r = cqsoptex.mpq_QSget_column_index(self._c_qsdata, variable, &colindex)
             if r != 0:
                 raise ExactProblemError('An error occured in QSget_column_index()')
@@ -272,7 +282,7 @@ cdef class ExactProblem:
 
             # Set name
             if name is not None:
-                n = name
+                n = _chars(name)
             else:
                 n = NULL
 
@@ -315,7 +325,7 @@ cdef class ExactProblem:
         if values is None:
             values = ()
         if isinstance(values, dict):
-            values = values.iteritems()
+            values = iteritems(values)
         values = list(values)
         count = len(values)
 
@@ -352,7 +362,7 @@ cdef class ExactProblem:
 
             # Set name
             if name is not None:
-                n = name
+                n = _chars(name)
             else:
                 n = NULL
 
@@ -381,7 +391,7 @@ cdef class ExactProblem:
         cdef int r
 
         if isinstance(values, dict):
-            values = values.iteritems()
+            values = iteritems(values)
 
         cgmp.mpq_init(value_q)
         try:

@@ -32,17 +32,17 @@ class TestSmallExactProblem(unittest.TestCase):
         self._problem.add_variable(name='z', lower=200, upper=None)
         self._problem.add_linear_constraint(qsoptex.ConstraintSense.GREATER, {'y': 1, 'z': -1 }, rhs=0)
         status = self._problem.solve()
-        self.assertEquals(status, qsoptex.SolutionStatus.INFEASIBLE)
+        self.assertEqual(status, qsoptex.SolutionStatus.INFEASIBLE)
 
     def test_reaches_status_unbounded(self):
         self._problem.add_variable(name='z', lower=200, upper=None, objective=1)
         status = self._problem.solve()
-        self.assertEquals(status, qsoptex.SolutionStatus.UNBOUNDED)
+        self.assertEqual(status, qsoptex.SolutionStatus.UNBOUNDED)
 
     def test_objective_value_is_correct(self):
         self._problem.solve()
         obj = self._problem.get_objective_value()
-        self.assertEquals(obj, fractions.Fraction('105/2'))
+        self.assertEqual(obj, fractions.Fraction('105/2'))
 
     def test_objective_value_is_rational(self):
         self._problem.solve()

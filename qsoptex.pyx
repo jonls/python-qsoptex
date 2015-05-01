@@ -6,6 +6,8 @@ cimport cgmp
 import numbers, fractions
 import logging
 
+from six import string_types, integer_types, text_type, iteritems
+
 
 # Initialize library
 # Python modules never unload so we don't have any place to
@@ -23,17 +25,19 @@ cqsoptex.QSlog_set_handler(
     <cqsoptex.QSlog_func>_python_log_func, NULL)
 
 
-### Constants
+# Constants
 # Simplex algorithm
 class SimplexAlgorithm(object):
     PRIMAL = cqsoptex.PRIMAL_SIMPLEX
     DUAL = cqsoptex.DUAL_SIMPLEX
     PRIMAL_OR_DUAL = cqsoptex.PRIMAL_OR_DUAL
 
+
 # Objective sense
 class ObjectiveSense(object):
     MINIMIZE = cqsoptex.QS_MIN
     MAXIMIZE = cqsoptex.QS_MAX
+
 
 # Solution status
 class SolutionStatus(object):
@@ -49,6 +53,7 @@ class SolutionStatus(object):
     MODIFIED = cqsoptex.QS_LP_MODIFIED
     CHANGE_PREC = cqsoptex.QS_LP_CHANGE_PREC
 
+
 # Parameters that can be set by QSset_param
 class Parameter(object):
     PRIMAL_PRICING = cqsoptex.QS_PARAM_PRIMAL_PRICING
@@ -59,6 +64,7 @@ class Parameter(object):
     SIMPLEX_SCALING = cqsoptex.QS_PARAM_SIMPLEX_SCALING
     OBJULIM = cqsoptex.QS_PARAM_OBJULIM
     OBJLLIM = cqsoptex.QS_PARAM_OBJLLIM
+
 
 # Values for pricing parameter
 class Pricing(object):
@@ -74,6 +80,7 @@ class Pricing(object):
     DSTEEP = cqsoptex.QS_PRICE_DSTEEP
     DMULTPARTIAL = cqsoptex.QS_PRICE_DMULTPARTIAL
 
+
 # Constraint sense
 class ConstraintSense(object):
     EQUAL = 'E'
@@ -86,15 +93,22 @@ cdef extern from 'Python.h':
     long PyLong_AsLongAndOverflow(object value, int* overflow)
 
 
+cdef const char* _chars(s):
+    """Convert input string to binary string (bytes)"""
+    if isinstance(s, text_type):
+        return s.encode('utf-8')
+    return s
+
+
 # Conversion from numeric Python types to GMP types
 cdef int mpz_set_pylong(cgmp.mpz_t rop, object value) except -1:
-    '''Set mpz_t value from Python int/long object'''
+    """Set mpz_t value from Python int/long object"""
 
     cdef int overflow
     cdef long long_value
     cdef cgmp.mpz_t z_temp
 
-    if not isinstance(value, (int, long)):
+    if not isinstance(value, integer_types):
         raise ValueError('Value must be a Python int or long')
 
     long_value = PyLong_AsLongAndOverflow(value, &overflow)
@@ -120,8 +134,9 @@ cdef int mpz_set_pylong(cgmp.mpz_t rop, object value) except -1:
 
     return 0
 
+
 cdef int mpq_set_pyrational(cgmp.mpq_t rop, object value) except -1:
-    '''Set mpq_t value from Python Rational object'''
+    """Set mpq_t value from Python Rational object"""
 
     if not isinstance(value, numbers.Rational):
         raise ValueError('Value must be a Python numbers.Rational')
@@ -132,8 +147,9 @@ cdef int mpq_set_pyrational(cgmp.mpq_t rop, object value) except -1:
 
     return 0
 
+
 cdef int mpq_set_pynumeric(cgmp.mpq_t rop, object value) except -1:
-    '''Set mpq_t value from Python numeric object'''
+    """Set mpq_t value from Python numeric object"""
     if not isinstance(value, numbers.Rational):
         # Try to convert to fractional value
         value = fractions.Fraction(value)
@@ -144,7 +160,7 @@ cdef int mpq_set_pynumeric(cgmp.mpq_t rop, object value) except -1:
 
 # Conversion from GMP types to Python numeric types
 cdef object pylong_from_mpz(const cgmp.mpz_t value):
-    '''Return Python long representing the value'''
+    """Return Python long representing the value"""
     cdef size_t i
 
     result = 0
@@ -154,8 +170,9 @@ cdef object pylong_from_mpz(const cgmp.mpz_t value):
 
     return cgmp.mpz_sgn(value) * result
 
+
 cdef object pyrational_from_mpq(const cgmp.mpq_t value):
-    '''Return Python Rational (long or Fraction) representing the value'''
+    """Return Python Rational (long or Fraction) representing the value"""
 
     num = pylong_from_mpz(cgmp.mpq_numref(value))
     denom = pylong_from_mpz(cgmp.mpq_denref(value))
@@ -168,12 +185,12 @@ def print_version():
     cqsoptex.QSopt_ex_version()
 
 
-# Wrapper around exact LP problem
 class ExactProblemError(Exception):
-    pass
+    """Raised when an error in ExactProblem occurs"""
+
 
 cdef class ExactProblem:
-    '''Representation of exact LP problem'''
+    """Representation of exact LP problem"""
 
     # C API Problem
     cdef cqsoptex.mpq_QSdata* _c_qsdata
@@ -196,7 +213,7 @@ cdef class ExactProblem:
         stdlib.free(self._c_sol_x)
 
     def _invalidate_solution(self):
-        '''Free the cached solution values'''
+        """Free the cached solution values"""
         if self._c_sol_x is not NULL:
             for i in range(self._c_sol_nvars):
                 cgmp.mpq_clear(self._c_sol_x[i])
@@ -205,28 +222,32 @@ cdef class ExactProblem:
         self._c_sol_x = NULL
 
     def _index_maybe_string(self, variable):
-        '''Get the column index from a variable that is either name (string) or index'''
+        """Get the column index from a variable that is either name (string)
+        or index"""
 
         cdef int r, colindex
 
-        if isinstance(variable, basestring):
-            r = cqsoptex.mpq_QSget_column_index(self._c_qsdata, variable, &colindex)
+        if isinstance(variable, string_types):
+            variable = _chars(variable)
+            r = cqsoptex.mpq_QSget_column_index(
+                self._c_qsdata, variable, &colindex)
             if r != 0:
-                raise ExactProblemError('An error occured in QSget_column_index()')
+                raise ExactProblemError(
+                    'An error occured in QSget_column_index()')
             return colindex
         else:
             return int(variable)
 
     def get_variable_count(self):
-        '''Get number of variables defined in the problem'''
+        """Get number of variables defined in the problem"""
         return cqsoptex.mpq_QSget_colcount(self._c_qsdata)
 
     def get_constraint_count(self):
-        '''Get number of constraints defined in the problem'''
+        """Get number of constraints defined in the problem"""
         return cqsoptex.mpq_QSget_rowcount(self._c_qsdata)
 
     def read(self, path, filetype='MPS'):
-        '''Read LP problem from the given file'''
+        """Read LP problem from the given file"""
         self._invalidate_solution()
         qsdata = cqsoptex.mpq_QSread_prob(path, filetype)
         if qsdata is NULL:
@@ -235,13 +256,13 @@ cdef class ExactProblem:
         self._c_qsdata = qsdata
 
     def write(self, path, filetype='MPS'):
-        '''Write LP problem to the given file'''
+        """Write LP problem to the given file"""
         cdef int r = cqsoptex.mpq_QSwrite_prob(self._c_qsdata, path, filetype)
         if r != 0:
             raise ExactProblemError('An error occured in QSwrite_prob()')
 
     def add_variable(self, objective=None, lower=None, upper=None, name=None):
-        '''Add variable to problem'''
+        """Add variable to problem"""
         cdef cgmp.mpq_t objective_q, lower_q, upper_q
         cdef const char* n
         cdef int r
@@ -272,12 +293,13 @@ cdef class ExactProblem:
 
             # Set name
             if name is not None:
-                n = name
+                n = _chars(name)
             else:
                 n = NULL
 
             # Create column
-            r = cqsoptex.mpq_QSnew_col(self._c_qsdata, objective_q, lower_q, upper_q, n)
+            r = cqsoptex.mpq_QSnew_col(
+                self._c_qsdata, objective_q, lower_q, upper_q, n)
             if r != 0:
                 raise ExactProblemError('An error occured in QSnew_col()')
         finally:
@@ -286,7 +308,7 @@ cdef class ExactProblem:
             cgmp.mpq_clear(upper_q)
 
     def add_linear_constraint(self, sense, values=None, rhs=0, name=None):
-        '''Add linear constraint to problem'''
+        """Add linear constraint to problem"""
         cdef cgmp.mpq_t rhs_q
         cdef const char* n
         cdef char sense_c
@@ -315,7 +337,7 @@ cdef class ExactProblem:
         if values is None:
             values = ()
         if isinstance(values, dict):
-            values = values.iteritems()
+            values = iteritems(values)
         values = list(values)
         count = len(values)
 
@@ -352,11 +374,12 @@ cdef class ExactProblem:
 
             # Set name
             if name is not None:
-                n = name
+                n = _chars(name)
             else:
                 n = NULL
 
-            r = cqsoptex.mpq_QSadd_row(self._c_qsdata, count, indices, values_q, &rhs_q, sense_c, n)
+            r = cqsoptex.mpq_QSadd_row(
+                self._c_qsdata, count, indices, values_q, &rhs_q, sense_c, n)
             if r != 0:
                 raise ExactProblemError('An error occured in QSnew_row()')
         finally:
@@ -368,20 +391,20 @@ cdef class ExactProblem:
             stdlib.free(values_q)
 
     def set_objective_sense(self, sense):
-        '''Set objective sense (i.e. minimize or maximize)'''
+        """Set objective sense (i.e. minimize or maximize)"""
 
         cdef int r = cqsoptex.mpq_QSchange_objsense(self._c_qsdata, sense)
         if r != 0:
             raise ExactProblemError('An error occured in QSchange_objsense()')
 
     def set_linear_objective(self, values):
-        '''Set linear objective values from dict or iterator of pairs'''
+        """Set linear objective values from dict or iterator of pairs"""
 
         cdef cgmp.mpq_t value_q
         cdef int r
 
         if isinstance(values, dict):
-            values = values.iteritems()
+            values = iteritems(values)
 
         cgmp.mpq_init(value_q)
         try:
@@ -389,14 +412,16 @@ cdef class ExactProblem:
                 index = self._index_maybe_string(variable)
                 mpq_set_pynumeric(value_q, value)
 
-                r = cqsoptex.mpq_QSchange_objcoef(self._c_qsdata, index, value_q)
+                r = cqsoptex.mpq_QSchange_objcoef(
+                    self._c_qsdata, index, value_q)
                 if r != 0:
-                    raise ExactProblemError('An error occured in QSchange_objcoef()')
+                    raise ExactProblemError(
+                        'An error occured in QSchange_objcoef()')
         finally:
             cgmp.mpq_clear(value_q)
 
     def solve(self):
-        '''Solve problem and return status'''
+        """Solve problem and return status"""
         cdef int status
         cdef int r, i
 
@@ -411,7 +436,8 @@ cdef class ExactProblem:
         if status == SolutionStatus.OPTIMAL:
             # Allocate space for solution values
             self._c_sol_nvars = cqsoptex.mpq_QSget_colcount(self._c_qsdata)
-            self._c_sol_x = <cgmp.mpq_t*>stdlib.malloc(self._c_sol_nvars * sizeof(cgmp.mpq_t))
+            self._c_sol_x = <cgmp.mpq_t*>stdlib.malloc(
+                self._c_sol_nvars * sizeof(cgmp.mpq_t))
             if self._c_sol_x is NULL:
                 raise MemoryError()
 
@@ -426,7 +452,7 @@ cdef class ExactProblem:
         return status
 
     def get_status(self):
-        '''Get status of problem'''
+        """Get status of problem"""
         cdef int status
         cdef int r = cqsoptex.mpq_QSget_status(self._c_qsdata, &status)
         if r != 0:
@@ -434,7 +460,7 @@ cdef class ExactProblem:
         return status
 
     def get_param(self, param):
-        '''Get value of parameter'''
+        """Get value of parameter"""
         cdef int value
         cdef int r = cqsoptex.mpq_QSget_param(self._c_qsdata, param, &value)
         if r != 0:
@@ -442,13 +468,13 @@ cdef class ExactProblem:
         return value
 
     def set_param(self, param, value):
-        '''Set parameter to value'''
+        """Set parameter to value"""
         cdef int r = cqsoptex.mpq_QSset_param(self._c_qsdata, param, value)
         if r != 0:
             raise ExactProblemError('An error occured in QSset_param()')
 
     def get_value(self, variable):
-        '''Get value of variable'''
+        """Get value of variable"""
 
         cdef int index = self._index_maybe_string(variable)
         if index < 0 or index >= self._c_sol_nvars:
@@ -456,14 +482,14 @@ cdef class ExactProblem:
         return pyrational_from_mpq(self._c_sol_x[index])
 
     def get_values(self):
-        '''Get the variable values as a list'''
+        """Get the variable values as a list"""
         values = []
         for i in range(self._c_sol_nvars):
             values.append(pyrational_from_mpq(self._c_sol_x[i]))
         return values
 
     def get_objective_value(self):
-        '''Get value of objective'''
+        """Get value of objective"""
         cdef int r
         cdef cgmp.mpq_t value
         cgmp.mpq_init(value)

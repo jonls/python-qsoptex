@@ -55,7 +55,7 @@ the modified version at https://github.com/jonls/qsopt-ex is required at
 version 2.5.10.3 or later.
 
 Use ``setup.py`` to build the extension. The setup script is based on
-``distutils``.
+``setuptools``.
 
 .. code:: shell
 

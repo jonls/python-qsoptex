@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
 import sys, os
-from distutils.core import setup
-from distutils.extension import Extension
+import warnings
+
+from setuptools import setup, Extension
 
 try:
     from Cython.Build import cythonize
     HAVE_CYTHON = True
-except ImportError:
+except ImportError as e:
     HAVE_CYTHON = False
+    warnings.warn('{}'.format(e))
 
 # Determine usage of Cython
 USE_CYTHON = HAVE_CYTHON
@@ -35,9 +37,9 @@ if 'QSOPTEX_LIBRARY_DIR' in os.environ:
 
 ext = '.pyx' if USE_CYTHON else '.c'
 extensions = [Extension('qsoptex', ['qsoptex'+ext],
-                include_dirs=include_dirs,
-                libraries=['gmp', 'qsopt_ex'],
-                library_dirs=library_dirs)]
+                        include_dirs=include_dirs,
+                        libraries=['gmp', 'qsopt_ex'],
+                        library_dirs=library_dirs)]
 
 if USE_CYTHON:
     extensions = cythonize(extensions, include_path=include_dirs)
@@ -57,12 +59,20 @@ setup(
     description='Python bindings for QSopt_ex, an exact linear programming solver',
     long_description=long_description,
 
-    classifiers=['Development Status :: 4 - Beta',
-                 'Intended Audience :: Developers',
-                 'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
-                 'Programming Language :: Cython',
-                 'Programming Language :: Python :: 2.7',
-                 'Topic :: Scientific/Engineering :: Mathematics'],
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Programming Language :: Cython',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.4',
+        'Topic :: Scientific/Engineering :: Mathematics'
+    ],
 
+    install_requires=[
+        'six'
+    ],
+
+    test_suite='test_qsoptex',
     ext_modules = extensions
 )

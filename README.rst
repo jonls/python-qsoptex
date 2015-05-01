@@ -5,6 +5,10 @@ QSopt\_ex Python bindings
    :alt: Build Status
    :target: https://travis-ci.org/jonls/python-qsoptex
 
+.. image:: https://badge.fury.io/py/python-qsoptex.svg
+   :alt: PyPI badge
+   :target: http://badge.fury.io/py/python-qsoptex
+
 Usage
 -----
 

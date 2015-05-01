@@ -14,7 +14,5 @@ before_install:
 
   # Install Cython
   - pip install cython
-  - pip install six
 
-install: pip install .
-script: ./test_qsoptex.py
+script: ./setup.py test

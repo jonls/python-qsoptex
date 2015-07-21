@@ -76,12 +76,15 @@ cdef extern from 'qsopt_ex/qsopt_mpq.h' nogil:
     int mpq_QSget_rowcount(mpq_QSdata* problem)
 
     int mpq_QSget_column_index(mpq_QSdata* problem, const char* name, int* index)
+    int mpq_QSget_row_index(mpq_QSdata* problem, const char* name, int* index)
 
     int mpq_QSchange_objsense(mpq_QSdata* problem, int sense)
     int mpq_QSchange_objcoef(mpq_QSdata* problem, int index, mpq_t value)
 
     int mpq_QSnew_col(mpq_QSdata* problem, const mpq_t objective, const mpq_t lower, const mpq_t upper, const char* name)
     int mpq_QSadd_row(mpq_QSdata* problem, int count, int* indices, const mpq_t* values, const mpq_t* rhs, char sense, const char* name)
+    int mpq_QSdelete_col(mpq_QSdata* problem, int index)
+    int mpq_QSdelete_row(mpq_QSdata* problem, int index)
 
     mpq_QSdata* mpq_QSread_prob(const char* filepath, const char* filetype)
     int mpq_QSwrite_prob(mpq_QSdata* problem, const char* filepath, const char* filetype)

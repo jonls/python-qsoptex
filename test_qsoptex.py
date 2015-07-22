@@ -113,6 +113,20 @@ class TestSmallExactProblem(unittest.TestCase):
         self.assertEqual(
             self._problem.get_objective_value(), fractions.Fraction('355/2'))
 
+    def test_delete_constraint(self):
+        self._problem.add_linear_constraint(
+            qsoptex.ConstraintSense.LESS, {'x': 1}, rhs=15, name='constr2')
+        status = self._problem.solve()
+        self.assertEqual(status, qsoptex.SolutionStatus.OPTIMAL)
+        self.assertEqual(self._problem.get_value('x'), 15)
+
+        self._problem.delete_linear_constraint('constr2')
+
+        status = self._problem.solve()
+        self.assertEqual(status, qsoptex.SolutionStatus.OPTIMAL)
+        self.assertEqual(
+            self._problem.get_value('x'), fractions.Fraction('35/2'))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -27,6 +27,9 @@ other ``numbers.Rational``) or anything that can be converted to
 .. code:: python
 
     import qsoptex
+    import logging
+
+    logging.basicConfig(level=logging.DEBUG)
 
     p = qsoptex.ExactProblem()
 

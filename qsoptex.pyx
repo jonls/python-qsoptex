@@ -322,6 +322,20 @@ cdef class ExactProblem:
             cgmp.mpq_clear(lower_q)
             cgmp.mpq_clear(upper_q)
 
+    def delete_variable(self, variable):
+        """Delete a linear constraint
+
+        The constraint can be specified as an integer index or as a named
+        constraint.
+        """
+        cdef index = self._col_index_maybe_string(variable)
+        if index < 0:
+            raise IndexError('Invalid variable index')
+
+        cdef r = cqsoptex.mpq_QSdelete_col(self._c_qsdata, index)
+        if r != 0:
+            raise ExactProblemError('An error occured in QSdelete_col()')
+
     def add_linear_constraint(self, sense, values=None, rhs=0, name=None):
         """Add linear constraint to problem"""
         cdef cgmp.mpq_t rhs_q
@@ -406,6 +420,11 @@ cdef class ExactProblem:
             stdlib.free(values_q)
 
     def delete_linear_constraint(self, constraint):
+        """Delete a linear constraint
+
+        The constraint can be specified as an integer index or as a named
+        constraint.
+        """
         cdef index = self._row_index_maybe_string(constraint)
         if index < 0:
             raise IndexError('Invalid constraint index')

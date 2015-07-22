@@ -221,9 +221,8 @@ cdef class ExactProblem:
         self._c_sol_nvars = 0
         self._c_sol_x = NULL
 
-    def _index_maybe_string(self, variable):
-        """Get the column index from a variable that is either name (string)
-        or index"""
+    def _col_index_maybe_string(self, variable):
+        """Get the column index from either name (string) or index"""
 
         cdef int r, colindex
 
@@ -237,6 +236,22 @@ cdef class ExactProblem:
             return colindex
         else:
             return int(variable)
+
+    def _row_index_maybe_string(self, constraint):
+        """Get the row index from either name (string) or index"""
+
+        cdef int r, rowindex
+
+        if isinstance(constraint, string_types):
+            constraint = _chars(constraint)
+            r = cqsoptex.mpq_QSget_row_index(
+                self._c_qsdata, constraint, &rowindex)
+            if r != 0:
+                raise ExactProblemError(
+                    'An error occured in QSget_row_index()')
+            return rowindex
+        else:
+            return int(constraint)
 
     def get_variable_count(self):
         """Get number of variables defined in the problem"""
@@ -307,6 +322,20 @@ cdef class ExactProblem:
             cgmp.mpq_clear(lower_q)
             cgmp.mpq_clear(upper_q)
 
+    def delete_variable(self, variable):
+        """Delete a linear constraint
+
+        The constraint can be specified as an integer index or as a named
+        constraint.
+        """
+        cdef index = self._col_index_maybe_string(variable)
+        if index < 0:
+            raise IndexError('Invalid variable index')
+
+        cdef r = cqsoptex.mpq_QSdelete_col(self._c_qsdata, index)
+        if r != 0:
+            raise ExactProblemError('An error occured in QSdelete_col()')
+
     def add_linear_constraint(self, sense, values=None, rhs=0, name=None):
         """Add linear constraint to problem"""
         cdef cgmp.mpq_t rhs_q
@@ -363,7 +392,7 @@ cdef class ExactProblem:
                 variable, value = pair
 
                 # Get variable index and value
-                indices[i] = self._index_maybe_string(variable)
+                indices[i] = self._col_index_maybe_string(variable)
                 mpq_set_pynumeric(values_q[i], value)
 
             # Set right-hand side
@@ -390,6 +419,20 @@ cdef class ExactProblem:
                 cgmp.mpq_clear(values_q[i])
             stdlib.free(values_q)
 
+    def delete_linear_constraint(self, constraint):
+        """Delete a linear constraint
+
+        The constraint can be specified as an integer index or as a named
+        constraint.
+        """
+        cdef index = self._row_index_maybe_string(constraint)
+        if index < 0:
+            raise IndexError('Invalid constraint index')
+
+        cdef r = cqsoptex.mpq_QSdelete_row(self._c_qsdata, index)
+        if r != 0:
+            raise ExactProblemError('An error occured in QSdelete_row()')
+
     def set_objective_sense(self, sense):
         """Set objective sense (i.e. minimize or maximize)"""
 
@@ -409,7 +452,7 @@ cdef class ExactProblem:
         cgmp.mpq_init(value_q)
         try:
             for variable, value in values:
-                index = self._index_maybe_string(variable)
+                index = self._col_index_maybe_string(variable)
                 mpq_set_pynumeric(value_q, value)
 
                 r = cqsoptex.mpq_QSchange_objcoef(
@@ -476,7 +519,7 @@ cdef class ExactProblem:
     def get_value(self, variable):
         """Get value of variable"""
 
-        cdef int index = self._index_maybe_string(variable)
+        cdef int index = self._col_index_maybe_string(variable)
         if index < 0 or index >= self._c_sol_nvars:
             raise IndexError('Invalid variable index')
         return pyrational_from_mpq(self._c_sol_x[index])

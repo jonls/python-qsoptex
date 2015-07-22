@@ -5,6 +5,10 @@ QSopt\_ex Python bindings
    :alt: Build Status
    :target: https://travis-ci.org/jonls/python-qsoptex
 
+.. image:: https://badge.fury.io/py/python-qsoptex.svg
+   :alt: PyPI badge
+   :target: http://badge.fury.io/py/python-qsoptex
+
 Usage
 -----
 
@@ -23,29 +27,61 @@ other ``numbers.Rational``) or anything that can be converted to
 .. code:: python
 
     import qsoptex
+    import logging
+
+    logging.basicConfig(level=logging.DEBUG)
 
     p = qsoptex.ExactProblem()
 
     p.add_variable(name='x', objective=2, lower=3.5, upper=17.5)
     p.add_variable(name='y', objective=-1, lower=None, upper=2)
-    p.add_linear_constraint(qsoptex.ConstraintSense.EQUAL, {'x': 1, 'y': 1}, rhs=0)
+    p.add_linear_constraint(qsoptex.ConstraintSense.EQUAL,
+                            {'x': 1, 'y': 1}, rhs=0)
     p.set_objective_sense(qsoptex.ObjectiveSense.MAXIMIZE)
 
     p.set_param(qsoptex.Parameter.SIMPLEX_DISPLAY, 1)
     status = p.solve()
     if status == qsoptex.SolutionStatus.OPTIMAL:
-        print 'Optimal solution'
-        print p.get_objective_value()
-        print p.get_value('x')
+        print('Optimal solution')
+        print(p.get_objective_value())
+        print(p.get_value('x'))
 
 The module is also able to load problems from external files:
 
 .. code:: python
 
     p = qsoptex.ExactProblem()
-    p.read('netlib/cycle.mps', filetype='MPS') # 'LP' is also supported
+    p.read('netlib/cycle.mps', filetype='MPS')  # 'LP' is also supported
     p.set_param(qsoptex.Parameter.SIMPLEX_DISPLAY, 1)
     status = p.solve()
+
+Known issues
+------------
+
+When creating a problem with the QSopt\_ex library, the variables and
+constraints will be assigned a default name if no name is specified by the
+user. Variables will be named ``xN`` or ``x_N`` and constraints will be named
+``cN`` or ``c_N`` (where ``N`` is an integer). If the user later adds a named
+variable or constraint which uses a name that is already in use, the name of
+the new variable or constraint will be silently changed by the QSopt\_ex
+library. For example, the last line of the following code will remove the
+first constraint from the problem, not the second.
+
+.. code:: python
+
+    p = qsoptex.ExactProblem()
+    p.add_variable(name='x', objective=2, lower=3.5, upper=17.5)
+    p.add_variable(name='y', objective=-1, lower=None, upper=2)
+    p.add_linear_constraint(qsoptex.ConstraintSense.EQUAL,
+                            {'x': 1, 'y': 1}, rhs=0)
+    p.add_linear_constraint(qsoptex.ConstraintSense.LESS,
+                            {'x': 1}, rhs=15, name='c1')
+    # Deletes the first constraint, not the second
+    p.delete_linear_constraint('c1')
+
+This issue can be avoided by always assigning names to variables and
+constraints, or by avoiding using the same names as QSopt\_ex uses as default
+names.
 
 Building
 --------
@@ -73,4 +109,3 @@ For example, if GnuMP is installed in the ``/opt/local`` prefix
 
     $ GMP_INCLUDE_DIR=/opt/local/include GMP_LIBRARY_DIR=/opt/local/lib \
             ./setup.py install
-

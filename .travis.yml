@@ -1,7 +1,6 @@
 language: python
 python:
   - "2.7"
-  - "3.4"
 before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libgmp-dev libgmp10
@@ -14,5 +13,9 @@ before_install:
 
   # Install Cython
   - pip install cython
+  - pip install tox
 
-script: ./setup.py test
+script: tox -v
+env:
+  - TOXENV=py27
+  - TOXENV=py34

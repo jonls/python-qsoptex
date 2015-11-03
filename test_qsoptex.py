@@ -32,6 +32,12 @@ class TestSmallExactProblem(unittest.TestCase):
             qsoptex.ConstraintSense.EQUAL, {'x': 1, 'y': 1}, rhs=0, name='c1')
         self._problem.set_objective_sense(qsoptex.ObjectiveSense.MAXIMIZE)
 
+    def test_add_infinity_variable_bound(self):
+        self._problem.add_variable(
+            name='z1', lower=float('-inf'), upper=10)
+        self._problem.add_variable(
+            name='z2', lower=0, upper=float('inf'))
+
     def test_reaches_status_optimal(self):
         status = self._problem.solve()
         self.assertEqual(status, qsoptex.SolutionStatus.OPTIMAL)

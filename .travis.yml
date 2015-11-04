@@ -39,4 +39,3 @@ deploy:
   on:
     tags: true
     repo: jonls/python-qsoptex
-  distributions: "sdist bdist_wheel"

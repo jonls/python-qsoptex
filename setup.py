@@ -50,7 +50,7 @@ with open('README.rst') as f:
 
 setup(
     name='python-qsoptex',
-    version='0.4',
+    version='0.5',
     license='GPLv3+',
     url='https://github.com/jonls/python-qsoptex',
     author='Jon Lund Steffensen',

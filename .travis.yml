@@ -30,3 +30,13 @@ script: tox -v
 env:
   - TOXENV=py27
   - TOXENV=py34
+
+deploy:
+  provider: pypi
+  user: jonls
+  password:
+    secure: pt1Z1jRIXiPGA6FyQKTzD6Qsszzp1XNQl71/kLqBECYoyBluVJJK4DhEeQueq+4Qb2yIphr/rzk26Rdj5fLip9W+6V9odTlUgy5NeYueybw5bk0AIs6dQ0uOT+ifRFYRuMVMF2fs1T/XGweZhjuftDk89WvOb7YHAkYINWYrDmI=
+  on:
+    tags: true
+    repo: jonls/python-qsoptex
+  distributions: "sdist bdist_wheel"

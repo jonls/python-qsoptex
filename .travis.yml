@@ -1,21 +1,42 @@
+sudo: false
 language: python
 python:
   - "2.7"
-before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libgmp-dev libgmp10
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/qsopt_ex-2.5.10.3
+addons:
+  apt:
+    packages:
+      - libgmp-dev
+      - libgmp10
+install:
+  # Install QSopt_ex library
+  - if [ ! -f "$HOME/qsopt_ex-2.5.10.3/bin/esolver" ]; then
+      ( mkdir src && cd src/;
+        curl -LO https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.3/qsopt_ex-2.5.10.3.tar.xz;
+        tar -xvaf qsopt_ex-2.5.10.3.tar.xz;
+        cd qsopt_ex-2.5.10.3/;
+        ./configure --prefix="$HOME/qsopt_ex-2.5.10.3" && make install );
+    fi
+  - export CPATH="$HOME/qsopt_ex-2.5.10.3/include:$CPATH"
+  - export LIBRARY_PATH="$HOME/qsopt_ex-2.5.10.3/lib:$LIBRARY_PATH"
+  - export LD_LIBRARY_PATH="$HOME/qsopt_ex-2.5.10.3/lib:$LD_LIBRARY_PATH"
 
-  # Install latest release of qsopt-ex library
-  - wget https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.3/qsopt-ex2_2.5.10.3-1_amd64.deb
-  - sudo dpkg -i qsopt-ex2_2.5.10.3-1_amd64.deb
-  - wget https://github.com/jonls/qsopt-ex/releases/download/v2.5.10.3/qsopt-ex-dev_2.5.10.3-1_amd64.deb
-  - sudo dpkg -i qsopt-ex-dev_2.5.10.3-1_amd64.deb
-
-  # Install Cython
-  - pip install cython
+  # Install tox
   - pip install tox
-
 script: tox -v
 env:
   - TOXENV=py27
   - TOXENV=py34
+
+deploy:
+  provider: pypi
+  user: jonls
+  password:
+    secure: pt1Z1jRIXiPGA6FyQKTzD6Qsszzp1XNQl71/kLqBECYoyBluVJJK4DhEeQueq+4Qb2yIphr/rzk26Rdj5fLip9W+6V9odTlUgy5NeYueybw5bk0AIs6dQ0uOT+ifRFYRuMVMF2fs1T/XGweZhjuftDk89WvOb7YHAkYINWYrDmI=
+  on:
+    tags: true
+    repo: jonls/python-qsoptex
+  distributions: "sdist bdist_wheel"

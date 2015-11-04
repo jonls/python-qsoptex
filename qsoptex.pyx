@@ -3,7 +3,9 @@ from libc cimport stdlib, limits
 cimport cqsoptex
 cimport cgmp
 
-import numbers, fractions
+import numbers
+import fractions
+import math
 import logging
 
 from six import string_types, integer_types, text_type, iteritems
@@ -150,10 +152,16 @@ cdef int mpq_set_pyrational(cgmp.mpq_t rop, object value) except -1:
 
 cdef int mpq_set_pynumeric(cgmp.mpq_t rop, object value) except -1:
     """Set mpq_t value from Python numeric object"""
-    if not isinstance(value, numbers.Rational):
-        # Try to convert to fractional value
-        value = fractions.Fraction(value)
-    mpq_set_pyrational(rop, value)
+    if math.isinf(value):
+        if value > 0:
+            cgmp.mpq_set(rop, cqsoptex.mpq_INFTY)
+        else:
+            cgmp.mpq_set(rop, cqsoptex.mpq_NINFTY)
+    else:
+        if not isinstance(value, numbers.Rational):
+            # Try to convert to fractional value
+            value = fractions.Fraction(value)
+        mpq_set_pyrational(rop, value)
 
     return 0
 
@@ -276,7 +284,8 @@ cdef class ExactProblem:
         if r != 0:
             raise ExactProblemError('An error occured in QSwrite_prob()')
 
-    def add_variable(self, objective=None, lower=None, upper=None, name=None):
+    def add_variable(self, objective=None, lower=-float('inf'),
+                     upper=float('inf'), name=None):
         """Add variable to problem"""
         cdef cgmp.mpq_t objective_q, lower_q, upper_q
         cdef const char* n
@@ -295,16 +304,14 @@ cdef class ExactProblem:
                 mpq_set_pynumeric(objective_q, objective)
 
             # Set lower bound
-            if lower is not None:
-                mpq_set_pynumeric(lower_q, lower)
-            else:
-                cgmp.mpq_set(lower_q, cqsoptex.mpq_NINFTY)
+            if lower is None:
+                lower = -float('inf')
+            mpq_set_pynumeric(lower_q, lower)
 
             # Set upper bound
-            if upper is not None:
-                mpq_set_pynumeric(upper_q, upper)
-            else:
-                cgmp.mpq_set(upper_q, cqsoptex.mpq_INFTY)
+            if upper is None:
+                upper = float('inf')
+            mpq_set_pynumeric(upper_q, upper)
 
             # Set name
             if name is not None:
